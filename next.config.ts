@@ -1,9 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
-  cacheComponents: true,
-  partialPrefetching: true,
+  // Not: cacheComponents / partialPrefetching (Next 16 deneysel) kapalı.
+  // Mock veri + istemci etkileşimli randevu akışı için ek Suspense sınırları
+  // gerektirmeden sade bir render modeli kullanıyoruz.
   turbopack: {
     rules: {
       "*.css": {
