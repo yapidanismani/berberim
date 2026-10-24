@@ -212,7 +212,11 @@ export type Database = {
     Functions: {
       taken_slots: {
         Args: { p_business_id: string; p_date: string };
-        Returns: { booking_time: string; staff_id: string | null }[];
+        Returns: {
+          booking_time: string;
+          staff_id: string | null;
+          duration_min: number;
+        }[];
       };
     };
     Enums: { [_ in never]: never };

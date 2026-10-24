@@ -125,6 +125,7 @@ export async function createBooking(input: CreateBookingInput): Promise<void> {
 export interface TakenSlot {
   time: string;
   staffId: string | null;
+  durationMin: number;
 }
 
 /** Bir işletme + tarih için dolu saatler (gerçek aktif randevular; PII yok). */
@@ -140,5 +141,6 @@ export async function getTakenSlots(
   return (data ?? []).map((r) => ({
     time: r.booking_time,
     staffId: r.staff_id,
+    durationMin: r.duration_min,
   }));
 }

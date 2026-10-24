@@ -101,12 +101,23 @@ export function BookingFlow({ business }: { business: Business }) {
     const times = slotTimes(business, service, date);
     // Aynı anda kaç randevu alınabilir (koltuk/usta sayısı; en az 1)
     const capacity = Math.max(business.staff.length, 1);
+    const toMin = (hhmm: string) => {
+      const [h, m] = hhmm.split(":").map(Number);
+      return h * 60 + m;
+    };
 
     let out = times.map((t) => {
-      const atT = taken.filter((b) => b.time === t);
-      const fullByCapacity = atT.length >= capacity;
+      const start = toMin(t);
+      const end = start + service.durationMin;
+      // Bu slotun [start, end) aralığıyla zaman olarak çakışan randevular
+      const overlapping = taken.filter((b) => {
+        const bStart = toMin(b.time);
+        const bEnd = bStart + b.durationMin;
+        return bStart < end && start < bEnd;
+      });
+      const fullByCapacity = overlapping.length >= capacity;
       const staffBusy = staffId
-        ? atT.some((b) => b.staffId === staffId)
+        ? overlapping.some((b) => b.staffId === staffId)
         : false;
       return { time: t, available: !(fullByCapacity || staffBusy) };
     });
