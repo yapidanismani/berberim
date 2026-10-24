@@ -25,8 +25,8 @@ import {
   toISODate,
   istanbulToday,
 } from "@/lib/utils";
-import { generateSlots, isOpenOn } from "@/lib/booking";
-import { createBooking } from "@/lib/data";
+import { slotTimes, isOpenOn } from "@/lib/booking";
+import { createBooking, getTakenSlots, type TakenSlot } from "@/lib/data";
 
 const contactSchema = z.object({
   customerName: z
@@ -56,6 +56,7 @@ export function BookingFlow({ business }: { business: Business }) {
   const [time, setTime] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [taken, setTaken] = useState<TakenSlot[]>([]);
 
   // Tarih/saat hesapları `new Date()` kullandığından (dinamik), prerender sırasında
   // değil, yalnızca istemcide mount sonrası hesaplanır.
@@ -76,17 +77,48 @@ export function BookingFlow({ business }: { business: Business }) {
     setNowMin(h * 60 + m);
   }, []);
 
+  // Seçilen gün için gerçek dolu saatleri çek (aktif randevular).
+  useEffect(() => {
+    if (!date) {
+      setTaken([]);
+      return;
+    }
+    let active = true;
+    getTakenSlots(business.id, date)
+      .then((t) => {
+        if (active) setTaken(t);
+      })
+      .catch(() => {
+        if (active) setTaken([]);
+      });
+    return () => {
+      active = false;
+    };
+  }, [business.id, date]);
+
   const slots = useMemo(() => {
     if (!service || !date) return [];
-    const all = generateSlots(business, service, date, staffId);
+    const times = slotTimes(business, service, date);
+    // Aynı anda kaç randevu alınabilir (koltuk/usta sayısı; en az 1)
+    const capacity = Math.max(business.staff.length, 1);
+
+    let out = times.map((t) => {
+      const atT = taken.filter((b) => b.time === t);
+      const fullByCapacity = atT.length >= capacity;
+      const staffBusy = staffId
+        ? atT.some((b) => b.staffId === staffId)
+        : false;
+      return { time: t, available: !(fullByCapacity || staffBusy) };
+    });
+
     if (date === todayIso && nowMin != null) {
-      return all.filter((s) => {
+      out = out.filter((s) => {
         const [h, m] = s.time.split(":").map(Number);
         return h * 60 + m > nowMin + 30; // en az 30 dk sonrası
       });
     }
-    return all;
-  }, [business, service, date, staffId, todayIso, nowMin]);
+    return out;
+  }, [business, service, date, staffId, taken, todayIso, nowMin]);
 
   const {
     register,

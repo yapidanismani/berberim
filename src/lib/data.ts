@@ -121,3 +121,24 @@ export async function createBooking(input: CreateBookingInput): Promise<void> {
 
   if (error) throw new Error(`Randevu oluşturulamadı: ${error.message}`);
 }
+
+export interface TakenSlot {
+  time: string;
+  staffId: string | null;
+}
+
+/** Bir işletme + tarih için dolu saatler (gerçek aktif randevular; PII yok). */
+export async function getTakenSlots(
+  businessId: string,
+  date: string,
+): Promise<TakenSlot[]> {
+  const { data, error } = await supabase.rpc("taken_slots", {
+    p_business_id: businessId,
+    p_date: date,
+  });
+  if (error) throw new Error(`Dolu saatler alınamadı: ${error.message}`);
+  return (data ?? []).map((r) => ({
+    time: r.booking_time,
+    staffId: r.staff_id,
+  }));
+}

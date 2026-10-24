@@ -209,7 +209,12 @@ export type Database = {
       };
     };
     Views: { [_ in never]: never };
-    Functions: { [_ in never]: never };
+    Functions: {
+      taken_slots: {
+        Args: { p_business_id: string; p_date: string };
+        Returns: { booking_time: string; staff_id: string | null }[];
+      };
+    };
     Enums: { [_ in never]: never };
     CompositeTypes: { [_ in never]: never };
   };

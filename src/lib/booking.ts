@@ -1,20 +1,5 @@
 import type { Business, Service } from "./types";
 
-export interface Slot {
-  time: string; // "HH:mm"
-  available: boolean;
-}
-
-/** Basit deterministik hash — sunucu/istemci arasında kararlı doluluk üretir */
-function seededHash(str: string): number {
-  let h = 2166136261;
-  for (let i = 0; i < str.length; i++) {
-    h ^= str.charCodeAt(i);
-    h = Math.imul(h, 16777619);
-  }
-  return (h >>> 0) / 4294967295; // 0..1
-}
-
 function toMinutes(hhmm: string): number {
   const [h, m] = hhmm.split(":").map(Number);
   return h * 60 + m;
@@ -38,31 +23,25 @@ export function isOpenOn(business: Business, iso: string): boolean {
 }
 
 /**
- * Bir gün için 30 dakikalık ızgarada randevu saatleri üretir.
+ * Bir gün için 30 dakikalık ızgarada randevu saatleri (sadece saatler).
  * Hizmet, kapanıştan önce tamamlanabiliyorsa saat eklenir.
- * Doluluk deterministik (seçilen personel + işletme + tarih + saate bağlı).
+ * Doluluk ayrıca gerçek randevulara göre hesaplanır (bkz. getTakenSlots).
  */
-export function generateSlots(
+export function slotTimes(
   business: Business,
   service: Service,
   iso: string,
-  staffId: string | null,
-): Slot[] {
+): string[] {
   const dh = dayHoursFor(business, iso);
   if (!dh || !dh.open || !dh.close) return [];
 
   const step = 30;
   const open = toMinutes(dh.open);
   const close = toMinutes(dh.close);
-  const slots: Slot[] = [];
+  const out: string[] = [];
 
   for (let t = open; t + service.durationMin <= close; t += step) {
-    const time = fromMinutes(t);
-    const seed = seededHash(
-      `${business.id}|${staffId ?? "any"}|${iso}|${time}`,
-    );
-    // ~%35 dolu
-    slots.push({ time, available: seed > 0.35 });
+    out.push(fromMinutes(t));
   }
-  return slots;
+  return out;
 }
