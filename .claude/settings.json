@@ -1,14 +1,20 @@
 {
-  "extraKnownMarketplaces": {
-    "comfyui-mcp": {
-      "source": { "source": "github", "repo": "artokun/comfyui-mcp" }
-    },
-    "bitwize-music": {
-      "source": { "source": "github", "repo": "bitwize-music-studio/claude-ai-music-skills" }
-    }
-  },
   "enabledPlugins": {
     "comfy@comfyui-mcp": true,
     "bitwize-music@bitwize-music": true
+  },
+  "extraKnownMarketplaces": {
+    "comfyui-mcp": {
+      "source": {
+        "source": "github",
+        "repo": "artokun/comfyui-mcp"
+      }
+    },
+    "bitwize-music": {
+      "source": {
+        "source": "github",
+        "repo": "bitwize-music-studio/claude-ai-music-skills"
+      }
+    }
   }
 }
